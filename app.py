@@ -33,9 +33,11 @@ st.write("## Upload files to start ")
 # upload entrylist
 enterylist_uploaded = st.file_uploader("Upload entrylist", type="csv")
 if enterylist_uploaded:
+    # read entrylist, index=audio number
+    # entrylist = pd.read_csv(enterylist_uploaded, index_col="audition_number")
     entrylist = pd.read_csv(enterylist_uploaded)
-    # st.write("### Entrylist")
-    # st.write(entrylist.head())
+    st.write("### Entrylist")
+    st.write(entrylist.head())
 
 # upload score sheets
 uploaded_file = st.file_uploader(

@@ -29,7 +29,7 @@ def process(scores, judges):
     """
     (score - mean) / deviation
     """
-    scores_processed = scores[["No", "name", "Represent"]].copy()
+    scores_processed = scores[["entry_number", "name", "Represent"]].copy()
 
     scores_mean = scores[judges].mean(axis=0)
     scores_std = scores[judges].std(axis=0)
@@ -52,17 +52,17 @@ def top36(scores_processed):
     # players_top36 = scores_des[['No', 'name', 'Represent']].iloc[:36]
     players_top36 = scores_des.iloc[:36]
     players_top4 = (
-        scores_des[["No", "name", "Represent"]]
+        scores_des[["entry_number", "name", "Represent"]]
         .iloc[:4]
-        .sort_values(by="No", ascending=True)
+        .sort_values(by="entry_number", ascending=True)
     )
 
     players_top5to36 = (
-        scores_des[["No", "name", "Represent"]].iloc[4:36]
+        scores_des[["entry_number", "name", "Represent"]].iloc[4:36]
         # .sort_values(by="No", ascending=True)
     )
     players_top5to36_sorted = players_top5to36.copy().sort_values(
-        by="No", ascending=True
+        by="entry_number", ascending=True
     )
 
     print(players_top36)
@@ -73,24 +73,24 @@ def top36(scores_processed):
 def outputfiles_local(
     folder_path, players_top4, players_top5to36, players_top5to36_sorted
 ):
-    players_top4[["No", "name", "Represent"]].to_csv(
+    players_top4[["entry_number", "name", "Represent"]].to_csv(
         os.path.join(folder_path, "top4.csv"), index=False
     )
-    players_top5to36[["No", "name", "Represent"]].to_csv(
+    players_top5to36[["entry_number", "name", "Represent"]].to_csv(
         os.path.join(folder_path, "top5to36.csv"), index=False
     )
-    players_top5to36_sorted[["No", "name", "Represent"]].to_csv(
+    players_top5to36_sorted[["entry_number", "name", "Represent"]].to_csv(
         os.path.join(folder_path, "top5to36_sorted.csv"), index=False
     )
 
 
 def outputfiles(players_top4, players_top5to36, players_top5to36_sorted):
     # dataframes to csv
-    top4_csv = players_top4[["No", "name", "Represent"]].to_csv(index=False)
+    top4_csv = players_top4[["entry_number", "name", "Represent"]].to_csv(index=False)
     # top5to36_csv = players_top5to36[["No", "name", "Represent"]].to_csv(index=False)
-    top5to36_sorted_csv = players_top5to36_sorted[["No", "name", "Represent"]].to_csv(
-        index=False
-    )
+    top5to36_sorted_csv = players_top5to36_sorted[
+        ["entry_number", "name", "Represent"]
+    ].to_csv(index=False)
 
     # make ZipFile
     with io.BytesIO() as buffer:
@@ -118,7 +118,7 @@ def get_zip(groups):
         with zipfile.ZipFile(buffer, "w") as z:
             for i, group in enumerate(groups):
                 # group_csv = group.to_csv(index=False)
-                group_csv = group.sort_values(by="No", ascending=True).to_csv(
+                group_csv = group.sort_values(by="entry_number", ascending=True).to_csv(
                     index=False
                 )
                 z.writestr(f"group_{i+1}.csv", group_csv)
