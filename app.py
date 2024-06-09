@@ -4,7 +4,8 @@ import os
 import numpy as np
 import pandas as pd
 import streamlit as st
-from main import outputfiles, process, top36
+
+from main import get_zip, outputfiles, process, top36
 from makegroup import split_even, split_random
 
 # グローバル変数
@@ -25,7 +26,9 @@ if not os.path.exists(folder_path):
 # set random seed randomly
 random_seed = np.random.randint(1000)
 
-st.title("Grouping App")
+st.title("Processing 1st prelim and grouping to 8")
+
+st.write("## Upload files to start ")
 
 # upload entrylist
 enterylist_uploaded = st.file_uploader("Upload entrylist", type="csv")
@@ -46,9 +49,9 @@ if uploaded_file:
 
     scores_list = []
     name_list = entrylist.columns.tolist()
-    st.write("### Scores")
+    st.write("### Raw scores")
     for i, file in enumerate(uploaded_files):
-        df = pd.read_csv(file)
+        df = pd.read_csv(file, header=None)
         scores_list.append(df)
 
         # get file name for column name
@@ -59,7 +62,7 @@ if uploaded_file:
     scores = pd.concat(scores_list, axis=1, ignore_index=True)
     scores = pd.concat([entrylist, scores], axis=1, ignore_index=True)
     scores.columns = name_list
-    st.write(scores.head())
+    st.dataframe(scores)
 
 
 if uploaded_files:
@@ -80,8 +83,9 @@ if uploaded_files:
     st.write(players_top5to36)
 
     # output files
-    outputfiles(folder_path, players_top4, players_top5to36, players_top5to36_sorted)
+    outputfiles(players_top4, players_top5to36, players_top5to36_sorted)
 
+st.write("## Grouping to 8 groups")
 
 # グループ分けの実行
 if st.button("Random 8 groups"):
@@ -116,15 +120,16 @@ if st.button("Even 8 groups (two top half and bottom half each)"):
     st.session_state["history"] = history
 
 # output files
-if st.button("Output files"):
+if st.button("Looks good to output?"):
     if not st.session_state["groups"]:
         st.error("Do grouping first.")
         st.stop()
 
     # load groups from session state
     groups = st.session_state["groups"]
-    for i, group in enumerate(groups):
-        group.to_csv(os.path.join(folder_path, f"equal_group_{i+1}.csv"), index=False)
+    get_zip(groups)
+
+st.write("### Logs")
 
 if len(st.session_state["history"]) > 1:
     # display history
@@ -137,10 +142,7 @@ if len(st.session_state["history"]) > 1:
     st.session_state["index"] = index
     st.write(history[index])
 
-    if st.button("output files"):
+    if st.button("Looks good to this output?"):
         groups = history[index]
-        for i, group in enumerate(groups):
-            group.to_csv(
-                os.path.join(folder_path, f"group_{i+1}_history.csv"), index=False
-            )
+        get_zip(groups)
         st.success("Successfully output files.")
