@@ -19,9 +19,9 @@ This project is designed to process preliminary data, group participants into eq
 - Entry list
 
     ``` csv
-    No, name, Represent
-    1, Player1, TeamA
-    2, Player2, TeamB
+    audition_number, entry_number, name, Represent
+    1, xx, Player1, TeamA
+    2, xx, Player2, TeamB
     ...
     ```
 
