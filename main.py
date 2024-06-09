@@ -87,7 +87,7 @@ def outputfiles_local(
 def outputfiles(players_top4, players_top5to36, players_top5to36_sorted):
     # dataframes to csv
     top4_csv = players_top4[["No", "name", "Represent"]].to_csv(index=False)
-    top5to36_csv = players_top5to36[["No", "name", "Represent"]].to_csv(index=False)
+    # top5to36_csv = players_top5to36[["No", "name", "Represent"]].to_csv(index=False)
     top5to36_sorted_csv = players_top5to36_sorted[["No", "name", "Represent"]].to_csv(
         index=False
     )
@@ -96,7 +96,7 @@ def outputfiles(players_top4, players_top5to36, players_top5to36_sorted):
     with io.BytesIO() as buffer:
         with zipfile.ZipFile(buffer, "w") as z:
             z.writestr("top4.csv", top4_csv)
-            z.writestr("top5to36.csv", top5to36_csv)
+            # z.writestr("top5to36.csv", top5to36_csv)
             z.writestr("top5to36_sorted.csv", top5to36_sorted_csv)
 
         buffer.seek(0)
@@ -106,7 +106,7 @@ def outputfiles(players_top4, players_top5to36, players_top5to36_sorted):
 
         # download button
         st.download_button(
-            label="Download top4.csv, top5to36.csv, top5to36_sorted.csv",
+            label="Download top4.csv, top5to36.csv",
             data=buffer.getvalue(),  # buffer.getvalue()でzipファイルのバイナリデータを取得
             file_name="top36.zip",
             mime="application/zip",
@@ -117,7 +117,10 @@ def get_zip(groups):
     with io.BytesIO() as buffer:
         with zipfile.ZipFile(buffer, "w") as z:
             for i, group in enumerate(groups):
-                group_csv = group.to_csv(index=False)
+                # group_csv = group.to_csv(index=False)
+                group_csv = group.sort_values(by="No", ascending=True).to_csv(
+                    index=False
+                )
                 z.writestr(f"group_{i+1}.csv", group_csv)
 
         buffer.seek(0)
