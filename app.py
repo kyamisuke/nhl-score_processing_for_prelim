@@ -145,4 +145,3 @@ if len(st.session_state["history"]) > 1:
     if st.button("Looks good to this output?"):
         groups = history[index]
         get_zip(groups)
-        st.success("Successfully output files.")
