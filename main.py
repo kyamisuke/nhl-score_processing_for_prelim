@@ -29,12 +29,16 @@ def process(scores, judges):
     """
     (score - mean) / deviation
     """
-    scores_processed = scores[["entry_number", "name", "Represent"]].copy()
+    scores_processed = scores[
+        ["audition_number", "entry_number", "name", "Represent"]
+    ].copy()
 
     scores_mean = scores[judges].mean(axis=0)
     scores_std = scores[judges].std(axis=0)
 
-    # breakpoint()
+    # st.write(judges)
+    # st.write(scores_mean)
+    # st.write(scores_std)
 
     for judge in judges:
         scores_processed.loc[:, judge] = (
@@ -49,8 +53,14 @@ def process(scores, judges):
 def top36(scores_processed):
     scores_des = scores_processed.sort_values(by="sum", ascending=False)
 
+    st.write("### Results of 1st prelim")
+    st.write(scores_des)
+
     # players_top36 = scores_des[['No', 'name', 'Represent']].iloc[:36]
     players_top36 = scores_des.iloc[:36]
+    st.write("### Top 36")
+    st.write(players_top36)
+
     players_top4 = (
         scores_des[["entry_number", "name", "Represent"]]
         .iloc[:4]
@@ -65,7 +75,7 @@ def top36(scores_processed):
         by="entry_number", ascending=True
     )
 
-    print(players_top36)
+    # print(players_top36)
 
     return players_top4, players_top5to36, players_top5to36_sorted
 
@@ -118,9 +128,7 @@ def get_zip(groups):
         with zipfile.ZipFile(buffer, "w") as z:
             for i, group in enumerate(groups):
                 # group_csv = group.to_csv(index=False)
-                group_csv = group.sort_values(by="entry_number", ascending=True).to_csv(
-                    index=False
-                )
+                group_csv = group.to_csv(index=False)
                 z.writestr(f"group_{i+1}.csv", group_csv)
 
         buffer.seek(0)

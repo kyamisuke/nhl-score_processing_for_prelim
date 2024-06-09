@@ -6,7 +6,7 @@ import pandas as pd
 import streamlit as st
 
 from main import get_zip, outputfiles, process, top36
-from makegroup import split_even, split_random
+from makegroup import split_random
 
 # グローバル変数
 uploaded_files = []
@@ -36,8 +36,8 @@ if enterylist_uploaded:
     # read entrylist, index=audio number
     # entrylist = pd.read_csv(enterylist_uploaded, index_col="audition_number")
     entrylist = pd.read_csv(enterylist_uploaded)
-    st.write("### Entrylist")
-    st.write(entrylist.head())
+    # st.write("### Entrylist")
+    # st.write(entrylist.head())
 
 # upload score sheets
 uploaded_file = st.file_uploader(
@@ -68,7 +68,7 @@ if uploaded_file:
 
 
 if uploaded_files:
-    name_list = name_list[3:]  # drop "No", "name", "Represent" from name_list
+    name_list = name_list[-4:]  # drop "No", "name", "Represent" from name_list
 
     # processing
     scores_processed = process(scores, name_list)
@@ -77,12 +77,12 @@ if uploaded_files:
     players_top4, players_top5to36, players_top5to36_sorted = top36(scores_processed)
 
     # display top4
-    st.write("### Top 4")
-    st.write(players_top4)
+    # st.write("### Top 4")
+    # st.write(players_top4)
 
     # display top5to36
-    st.write("### Top 5 to 36")
-    st.write(players_top5to36)
+    # st.write("### Top 5 to 36")
+    # st.write(players_top5to36)
 
     # output files
     outputfiles(players_top4, players_top5to36, players_top5to36_sorted)
@@ -102,22 +102,6 @@ if st.button("Random 8 groups"):
     history.append(groups)
 
     # save to session state
-    st.session_state["groups"] = groups
-    st.session_state["history"] = history
-
-if st.button("Even 8 groups (two top half and bottom half each)"):
-    groups = split_even(players_top5to36_sorted, random_seed)
-
-    # show groups
-    for i, group in enumerate(groups):
-        st.write(f"### Group {i+1}")
-        st.write(group)
-
-    # 履歴に追加
-    history = st.session_state.get("history", [])
-
-    history.append(groups)
-
     st.session_state["groups"] = groups
     st.session_state["history"] = history
 
