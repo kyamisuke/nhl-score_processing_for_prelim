@@ -7,11 +7,11 @@ This project is designed to process preliminary data, group participants into eq
 ## Usage
 
 1. Upload entrylist and score sheets
-2. download data of top 36 in local
+2. Download data of top 36 in local
 3. Group them into 8 groups (multiple trial is enabled)
-   - `Random 8 groups`: grouping ramdomly
-   - `Even 8 groups (two top half and bottom half each)`: picking two from top half and the other from bottom half of top 36
-4. refer logs of grouping
+   - `Random 8 groups` : grouping ramdomly
+   - `Even 8 groups (two top half and bottom half each)` : picking two from top half and the other from bottom half of top 36
+4. Refer logs of grouping
    - all of trials can be downloaded
 
 ## Expected data format
@@ -26,7 +26,7 @@ This project is designed to process preliminary data, group participants into eq
     ```
 
 - Score sheet
-  - file name should be `{judgename}.csv` as `{judgename}` will become its column name.
+  - file name should be `{judgename}.csv` as `{judgename}` become the column name.
 
 ## Output files
 
@@ -42,9 +42,9 @@ This project is designed to process preliminary data, group participants into eq
 
 ## Files
 
-- `app.py`: The main Streamlit application script. It handles file uploads, data processing, and displays the results interactively.
-- `main.py`: Contains the core functions for data processing, file output, and managing groupings.
-- `makegroup.py`: Contains the functions for splitting data into groups, both randomly and evenly.
+- `app.py` : The main Streamlit application script. It handles file uploads, data processing, and displays the results interactively.
+- `main.py` : Contains the core functions for data processing, file output, and managing groupings.
+- `makegroup.py` : Contains the functions for splitting data into groups, both randomly and evenly.
 
 ## Requirements
 
