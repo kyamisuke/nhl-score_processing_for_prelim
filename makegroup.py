@@ -19,7 +19,7 @@ def split_random(df, seed=42):
             start_idx + group_size if i < 7 else len(df)
         )  # 最後のグループは残り全て
         group = df_shuffled.iloc[start_idx:end_idx]
-        groups.append(group.sort_values(by="entry_number", ascending=True))
+        groups.append(group.sort_values(by="audition_number", ascending=True))
         # group.to_csv(f'group_{i+1}.csv', index=False)
 
     return groups

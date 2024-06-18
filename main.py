@@ -29,9 +29,7 @@ def process(scores, judges):
     """
     (score - mean) / deviation
     """
-    scores_processed = scores[
-        ["audition_number", "entry_number", "name", "Represent"]
-    ].copy()
+    scores_processed = scores[["audition_number", "name", "represent"]].copy()
 
     scores_mean = scores[judges].mean(axis=0)
     scores_std = scores[judges].std(axis=0)
@@ -53,29 +51,34 @@ def process(scores, judges):
 def top36(scores_processed):
     scores_des = scores_processed.sort_values(by="sum", ascending=False)
 
+    col_names = ["audition_number", "name", "represent"]
     st.write("### Results of 1st prelim")
     st.write(scores_des)
 
     # players_top36 = scores_des[['No', 'name', 'Represent']].iloc[:36]
-    players_top36 = scores_des.iloc[:36]
-    st.write("### Top 36")
-    st.write(players_top36)
+    # players_top36 = scores_des.iloc[:36]
+    # st.write("### Top 36")
+    # st.write(players_top36)
 
     players_top4 = (
-        scores_des[["entry_number", "name", "Represent"]]
-        .iloc[:4]
-        .sort_values(by="entry_number", ascending=True)
+        scores_des[col_names].iloc[:4].sort_values(by="audition_number", ascending=True)
     )
 
     players_top5to36 = (
-        scores_des[["entry_number", "name", "Represent"]].iloc[4:36]
+        scores_des[col_names].iloc[4:36]
         # .sort_values(by="No", ascending=True)
     )
     players_top5to36_sorted = players_top5to36.copy().sort_values(
-        by="entry_number", ascending=True
+        by="audition_number", ascending=True
     )
 
-    # print(players_top36)
+    # download button for score_des.csv
+    st.download_button(
+        label="Download result on 1stprelim.csv",
+        data=scores_des.to_csv(index=False, sep=","),
+        file_name="result-1stprelim.csv",
+        mime="text/csv",
+    )
 
     return players_top4, players_top5to36, players_top5to36_sorted
 
@@ -83,24 +86,26 @@ def top36(scores_processed):
 def outputfiles_local(
     folder_path, players_top4, players_top5to36, players_top5to36_sorted
 ):
-    players_top4[["entry_number", "name", "Represent"]].to_csv(
-        os.path.join(folder_path, "top4.csv"), index=False
+    col_names = ["audition_number", "name", "represent"]
+    players_top4[col_names].to_csv(
+        os.path.join(folder_path, "top4.csv"), index=False, sep=", "
     )
-    players_top5to36[["entry_number", "name", "Represent"]].to_csv(
-        os.path.join(folder_path, "top5to36.csv"), index=False
+    players_top5to36[col_names].to_csv(
+        os.path.join(folder_path, "top5to36.csv"), index=False, sep=", "
     )
-    players_top5to36_sorted[["entry_number", "name", "Represent"]].to_csv(
-        os.path.join(folder_path, "top5to36_sorted.csv"), index=False
+    players_top5to36_sorted[col_names].to_csv(
+        os.path.join(folder_path, "top5to36_sorted.csv"), index=False, sep=","
     )
 
 
 def outputfiles(players_top4, players_top5to36, players_top5to36_sorted):
+    col_names = ["audition_number", "name", "represent"]
     # dataframes to csv
-    top4_csv = players_top4[["entry_number", "name", "Represent"]].to_csv(index=False)
+    top4_csv = players_top4[col_names].to_csv(index=False, sep=", ")
     # top5to36_csv = players_top5to36[["No", "name", "Represent"]].to_csv(index=False)
-    top5to36_sorted_csv = players_top5to36_sorted[
-        ["entry_number", "name", "Represent"]
-    ].to_csv(index=False)
+    top5to36_sorted_csv = players_top5to36_sorted[col_names].to_csv(
+        index=False, sep=", "
+    )
 
     # make ZipFile
     with io.BytesIO() as buffer:
@@ -127,8 +132,9 @@ def get_zip(groups):
     with io.BytesIO() as buffer:
         with zipfile.ZipFile(buffer, "w") as z:
             for i, group in enumerate(groups):
-                # group_csv = group.to_csv(index=False)
-                group_csv = group.to_csv(index=False)
+                # drop " " column
+                group = group.drop(columns=1)
+                group_csv = group.to_csv(index=False, header=False, sep=" ")
                 z.writestr(f"group_{i+1}.csv", group_csv)
 
         buffer.seek(0)
