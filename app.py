@@ -1,43 +1,51 @@
 # app.py
-import os
 
 import numpy as np
 import pandas as pd
 import streamlit as st
 
-from main import get_zip, outputfiles, process, top36
+from main import process, top36
 from makegroup import split_random
+from outputtext import outputtext
 
 # グローバル変数
 uploaded_files = []
 
-# init session state: history, groups
+# init session state: num_entry, history, groups
+if "num_entry" not in st.session_state:
+    st.session_state["num_entry"] = 0
 if "history" not in st.session_state:
     st.session_state["history"] = []
 if "groups" not in st.session_state:
     st.session_state["groups"] = []
-
-# make folder to save files
-current_dir = os.getcwd()
-folder_path = os.path.join(current_dir, "outputs")
-if not os.path.exists(folder_path):
-    os.makedirs(folder_path)
+if "top4" not in st.session_state:
+    st.session_state["top4"] = []
 
 # set random seed randomly
 random_seed = np.random.randint(1000)
 
 st.title("Processing 1st prelim and grouping to 8")
 
+# input total entry number to session state
+st.write("### Input total entry number")
+st.session_state["num_entry"] = st.number_input(
+    "Total entry number", min_value=0, value=200
+)
+
 st.write("## Upload files to start ")
 
 # upload entrylist
 enterylist_uploaded = st.file_uploader("Upload entrylist", type="csv")
 if enterylist_uploaded:
-    # read entrylist, index=audio number
-    # entrylist = pd.read_csv(enterylist_uploaded, index_col="audition_number")
-    entrylist = pd.read_csv(enterylist_uploaded)
-    # st.write("### Entrylist")
-    # st.write(entrylist.head())
+    entrylist = pd.read_csv(
+        enterylist_uploaded, header=None, nrows=st.session_state["num_entry"]
+    )
+    # set column names
+    col_names = ["audition_number", "name", "represent"]
+    entrylist.columns = col_names
+
+    # dtype of audition_number -> int
+    # entrylist["audition_number"] = entrylist["audition_number"].astype(int)
 
 # upload score sheets
 uploaded_file = st.file_uploader(
@@ -53,7 +61,9 @@ if uploaded_file:
     name_list = entrylist.columns.tolist()
     st.write("### Raw scores")
     for i, file in enumerate(uploaded_files):
-        df = pd.read_csv(file, header=None)
+        df = pd.read_csv(
+            file, header=None, index_col=0, nrows=st.session_state["num_entry"]
+        )
         scores_list.append(df)
 
         # get file name for column name
@@ -62,13 +72,15 @@ if uploaded_file:
         name_list.append(file_name)
 
     scores = pd.concat(scores_list, axis=1, ignore_index=True)
+    scores.index = range(len(scores))  # give index from 0 to n
+
     scores = pd.concat([entrylist, scores], axis=1, ignore_index=True)
     scores.columns = name_list
     st.dataframe(scores)
 
 
 if uploaded_files:
-    name_list = name_list[-4:]  # drop "No", "name", "Represent" from name_list
+    name_list = name_list[-4:]  # judges name
 
     # processing
     scores_processed = process(scores, name_list)
@@ -77,15 +89,18 @@ if uploaded_files:
     players_top4, players_top5to36, players_top5to36_sorted = top36(scores_processed)
 
     # display top4
-    # st.write("### Top 4")
-    # st.write(players_top4)
+    st.write("### Top 4")
+    st.write(players_top4)
 
     # display top5to36
-    # st.write("### Top 5 to 36")
-    # st.write(players_top5to36)
+    st.write("### Top 5 to 36")
+    st.write(players_top5to36)
 
     # output files
-    outputfiles(players_top4, players_top5to36, players_top5to36_sorted)
+    # outputfiles(players_top4, players_top5to36, players_top5to36_sorted)
+
+    # save to session state
+    st.session_state["top4"] = players_top4
 
 st.write("## Grouping to 8 groups")
 
@@ -113,7 +128,8 @@ if st.button("Looks good to output?"):
 
     # load groups from session state
     groups = st.session_state["groups"]
-    get_zip(groups)
+    # get_zip(groups)
+    outputtext(groups, st.session_state["top4"])
 
 st.write("### Logs")
 
@@ -130,4 +146,5 @@ if len(st.session_state["history"]) > 1:
 
     if st.button("Looks good to this output?"):
         groups = history[index]
-        get_zip(groups)
+        # get_zip(groups)
+        outputtext(groups, st.session_state["top4"])
