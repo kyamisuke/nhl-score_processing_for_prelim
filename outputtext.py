@@ -6,8 +6,6 @@ from main import get_zip
 
 
 def outputtext(groups, top4):
-    group_names = ["A", "B", "C", "D", "E", "F", "G", "H"]
-
     # pre-process on top4
     # audition_number, name, represent -> audition_number+'space'+name/represent
     top4_processed = []
@@ -64,11 +62,29 @@ def outputtext(groups, top4):
 
     # display text in capyable format
     st.write("### Groups for 2nd prelim")
+    group_names = ["A", "B", "C", "D", "E", "F", "G", "H"]
+
     for i, output in enumerate(output_list):
         # drop " " column
         output = output.drop(columns=1)
         st.write(f"#### Group {group_names[i]}")
         st.write(output)
+
+    """
+    # display output_list in txt format
+    output_list_txt = {}
+    for i, output in enumerate(output_list):
+        # drop " " column
+        output = output.drop(columns=1)
+
+        # add to output_list_txt, key: group name, value: output in txt format
+        output_list_txt[group_names[i]] = output.to_string(index=False, header=False)
+
+    st.write("### Output in txt format")
+    st.write(output_list_txt)
+    for key, value in output_list_txt.items():
+        st.write(f"#### Group {key}")
+        st.write(value)"""
 
     get_zip(output_list)
 
