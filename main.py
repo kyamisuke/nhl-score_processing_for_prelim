@@ -129,13 +129,45 @@ def outputfiles(players_top4, players_top5to36, players_top5to36_sorted):
 
 
 def get_zip(groups):
+    group_names = ["A", "B", "C", "D", "E", "F", "G", "H"]
     with io.BytesIO() as buffer:
         with zipfile.ZipFile(buffer, "w") as z:
+            ""  # output in each group
             for i, group in enumerate(groups):
-                # drop " " column
-                group = group.drop(columns=1)
+                group = group.drop(columns=1)  # drop " " column
                 group_csv = group.to_csv(index=False, header=False, sep=" ")
-                z.writestr(f"group_{i+1}.csv", group_csv)
+
+                """
+                with open(f"group_{i+1}.txt", "w") as f:
+                    for i, row in enumerate(group):
+                        if i > 1 and int(row[0]) < 100:
+                            f.write(f"{row[0]}  {row[1]}\n")
+                        else:
+                            f.write(f"{row[0]} {row[1]}\n")
+
+                # z.write(f"group_{i+1}.txt")
+                # z.writestr(f"group_{i+1}.txt", open(f"group_{i+1}.txt").read())
+                """
+
+                z.writestr(f"group_{group_names[i]}.csv", group_csv)
+
+            # output altogether
+            with open("groups.txt", "w") as f_all:
+                for i, group in enumerate(groups):
+                    f_all.write(f"Group {group_names[i]}\n")
+
+                    group = group.drop(columns=1).values.tolist()
+                    # group_txt = group.to_string(index=False, header=False)
+                    # format "audition_number name represent"
+                    for i, row in enumerate(group):
+                        if i > 1 and int(row[0]) < 100:
+                            f_all.write(f"{row[0]}  {row[1]}\n")
+                        else:
+                            f_all.write(f"{row[0]} {row[1]}\n")
+
+                    f_all.write("\n")
+            # add to zip
+            z.write("groups.txt")
 
         buffer.seek(0)
 
