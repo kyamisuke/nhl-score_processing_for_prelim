@@ -1,4 +1,4 @@
-# Score processing and get groups for Next House Lab
+# Score processing and grouping for Next House Lab.
 
 ## [Web api](https://nhl-scoreprocessingforprelim.streamlit.app/)
 
