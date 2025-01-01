@@ -82,6 +82,22 @@ def top36(scores_processed):
 
     return players_top4, players_top5to36, players_top5to36_sorted
 
+def getJusteDebuoutSelection(scores_processed):
+    scores_des = scores_processed.sort_values(by="sum", ascending=False)
+
+    col_names = ["audition_number", "name", "represent"]
+    st.write("### Results of 1st prelim")
+    st.write(scores_des.iloc[:8])
+
+    st.write("### Results of best 16")
+    st.write(scores_des.iloc[:16])
+
+    players_top8 = (
+        scores_des[col_names].iloc[:8].sort_values(by="audition_number", ascending=True)
+    )
+
+    st.write("### Results of best 8; ascending=True")
+    st.write(players_top8)
 
 def outputfiles_local(
     folder_path, players_top4, players_top5to36, players_top5to36_sorted

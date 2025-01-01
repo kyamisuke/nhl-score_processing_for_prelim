@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-from main import process, top36
+from main import process, top36, getJusteDebuoutSelection
 from makegroup import split_random
 from outputtext import outputtext
 
@@ -86,21 +86,7 @@ if uploaded_files:
     scores_processed = process(scores, name_list)
 
     # get top36
-    players_top4, players_top5to36, players_top5to36_sorted = top36(scores_processed)
-
-    # display top4
-    st.write("### Top 4")
-    st.write(players_top4)
-
-    # display top5to36
-    st.write("### Top 5 to 36")
-    st.write(players_top5to36)
-
-    # output files
-    # outputfiles(players_top4, players_top5to36, players_top5to36_sorted)
-
-    # save to session state
-    st.session_state["top4"] = players_top4
+    getJusteDebuoutSelection(scores_processed)
 
 st.write("## Grouping to 8 groups")
 
