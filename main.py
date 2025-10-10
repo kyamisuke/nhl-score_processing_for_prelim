@@ -31,30 +31,22 @@ def process(scores, judges):
     """
     scores_processed = scores[["audition_number", "name", "represent"]].copy()
 
-    # scores_mean = scores[judges].mean(axis=0)
-    # scores_std = scores[judges].std(axis=0)
+    scores_mean = scores[judges].mean(axis=0)
+    scores_std = scores[judges].std(axis=0)
 
-    # # st.write(judges)
-    # # st.write(scores_mean)
-    # # st.write(scores_std)
-
-    # for judge in judges:
-    #     scores_processed.loc[:, judge] = (
-    #         scores.loc[:, judge] - scores_mean.loc[judge]
-    #     ) / scores_std.loc[judge]
+    # st.write(judges)
+    # st.write(scores_mean)
+    # st.write(scores_std)
 
     for judge in judges:
-        if judge == 'HERO':
-            newlist = []
-            for n in scores.loc[:, judge]:
-                newlist.append(n*2)
-            scores_processed.loc[:, judge] = newlist
-        else:
-            scores_processed.loc[:, judge] = scores.loc[:, judge]
+        scores_processed.loc[:, judge] = (
+            scores.loc[:, judge] - scores_mean.loc[judge]
+        ) / scores_std.loc[judge]
 
     scores_processed["sum"] = scores_processed[judges].sum(axis=1)
 
     return scores_processed
+
 
 def top36(scores_processed):
     scores_des = scores_processed.sort_values(by="sum", ascending=False)
