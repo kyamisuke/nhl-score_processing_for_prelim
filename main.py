@@ -95,7 +95,21 @@ def getJusteDebuoutSelection(scores_processed):
 
     col_names = ["audition_number", "name", "represent"]
     st.write("### Results of 1st prelim")
-    st.write(scores_des.iloc[:8])
+    # 8位タイまでを含める（8位のスコアと同点の参加者も表示）
+    eighth_place_score = scores_des.iloc[7]["sum"]
+    top8_with_ties = scores_des[scores_des["sum"] >= eighth_place_score].copy()
+
+    # 順位を追加（同点は同じ順位）
+    top8_with_ties.insert(0, "rank", scores_des["sum"].rank(ascending=False, method="min").astype(int))
+    top8_with_ties = top8_with_ties[top8_with_ties["rank"] <= top8_with_ties["rank"].max()]
+
+    # 8位タイの選手をハイライト
+    def highlight_eighth_ties(df):
+        is_eighth_tie = df["sum"] == eighth_place_score
+        return ["background-color: #ffeb3b" if v else "" for v in is_eighth_tie]
+
+    styled_df = top8_with_ties.style.apply(lambda _: highlight_eighth_ties(top8_with_ties), axis=0)
+    st.dataframe(styled_df)
 
     st.write("### Results of best 16")
     st.write(scores_des.iloc[:16])
