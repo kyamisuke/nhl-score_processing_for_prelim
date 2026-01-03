@@ -85,18 +85,31 @@ def top36(scores_processed):
 def getJusteDebuoutSelection(scores_processed):
     scores_des = scores_processed.sort_values(by="sum", ascending=False)
 
+    # 全参加者の完全な順位表を作成
+    complete_ranking = scores_des.copy()
+    complete_ranking.reset_index(drop=True, inplace=True)
+    complete_ranking.index = range(1, len(complete_ranking) + 1)
+    complete_ranking.index.name = "Rank"
+
     col_names = ["audition_number", "name", "represent"]
-    st.write("### Results of 1st prelim")
-    st.write(scores_des.iloc[:8])
+
+    st.write("### Complete Rankings - All Participants")
+    st.write(complete_ranking)
+
+    st.write("### Results of best 8")
+    st.write(complete_ranking.iloc[:8])
+
+    st.write("### Results of best 12")
+    st.write(complete_ranking.iloc[:12])
 
     st.write("### Results of best 16")
-    st.write(scores_des.iloc[:16])
+    st.write(complete_ranking.iloc[:16])
 
     players_top8 = (
-        scores_des[col_names].iloc[:8].sort_values(by="audition_number", ascending=True)
+        scores_des[col_names].iloc[:12].sort_values(by="audition_number", ascending=True)
     )
 
-    st.write("### Results of best 8; ascending=True")
+    st.write("### Results of best 12; ascending=True")
     st.write(players_top8)
 
 def outputfiles_local(
