@@ -4,133 +4,144 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-from main import process, top36, getJusteDebuoutSelection
-from makegroup import split_random
-from outputtext import outputtext
+from main import process, getJusteDebuoutSelection
 
-# グローバル変数
-uploaded_files = []
+# ジャンル定義
+GENRES = ["House", "Locking", "Popping", "Hiphop"]
 
-# init session state: num_entry, history, groups
-if "num_entry" not in st.session_state:
-    st.session_state["num_entry"] = 0
-if "history" not in st.session_state:
-    st.session_state["history"] = []
-if "groups" not in st.session_state:
-    st.session_state["groups"] = []
-if "top4" not in st.session_state:
-    st.session_state["top4"] = []
+# ジャンルごとの特別ジャッジのデフォルト値
+DEFAULT_SPECIAL_JUDGES = {
+    "House": "KWAME_House",
+    "Locking": "MASATO_Lockin",
+    "Popping": "HYA_Poppin",
+    "Hiphop": "BOUBOO_Hiphop",
+}
 
-# set random seed randomly
-random_seed = np.random.randint(1000)
+# init session state for each genre
+for genre in GENRES:
+    if f"{genre}_num_entry" not in st.session_state:
+        st.session_state[f"{genre}_num_entry"] = 0
+    if f"{genre}_entrylist" not in st.session_state:
+        st.session_state[f"{genre}_entrylist"] = None
+    if f"{genre}_scores" not in st.session_state:
+        st.session_state[f"{genre}_scores"] = None
+    if f"{genre}_processed" not in st.session_state:
+        st.session_state[f"{genre}_processed"] = False
+    if f"{genre}_special_judge" not in st.session_state:
+        st.session_state[f"{genre}_special_judge"] = DEFAULT_SPECIAL_JUDGES.get(genre, "")
 
-st.title("Processing 1st prelim and grouping to 8")
+st.title("Juste Debout - 4 Genres Score Processing")
 
-# input total entry number to session state
-st.write("### Input total entry number")
-st.session_state["num_entry"] = st.number_input(
-    "Total entry number", min_value=0, value=200
-)
+# タブを作成
+tabs = st.tabs(GENRES)
 
-st.write("## Upload files to start ")
+for i, genre in enumerate(GENRES):
+    with tabs[i]:
+        st.header(f"{genre}")
 
-# upload entrylist
-enterylist_uploaded = st.file_uploader("Upload entrylist", type="csv")
-if enterylist_uploaded:
-    entrylist = pd.read_csv(
-        enterylist_uploaded, header=None, nrows=st.session_state["num_entry"]
-    )
-    # set column names
-    col_names = ["audition_number", "name", "represent"]
-    entrylist.columns = col_names
+        # 設定セクション
+        st.write("### Settings")
+        col1, col2 = st.columns(2)
 
-    # dtype of audition_number -> int
-    # entrylist["audition_number"] = entrylist["audition_number"].astype(int)
+        with col1:
+            st.session_state[f"{genre}_num_entry"] = st.number_input(
+                f"Total entry number",
+                min_value=0,
+                value=200,
+                key=f"{genre}_entry_input"
+            )
 
-# upload score sheets
-uploaded_file = st.file_uploader(
-    "Upload score sheets from judges", type="csv", accept_multiple_files=True
-)
-if uploaded_file:
-    if enterylist_uploaded is None:
-        st.error("Upload entrylist first. Restart the app.")
-        st.stop()
-    uploaded_files = uploaded_file
+        with col2:
+            st.session_state[f"{genre}_special_judge"] = st.text_input(
+                "2x weight judge name",
+                value=st.session_state[f"{genre}_special_judge"],
+                key=f"{genre}_special_judge_input",
+                help="Enter judge name to apply 2x score multiplier (leave empty for no multiplier)"
+            )
 
-    scores_list = []
-    name_list = entrylist.columns.tolist()
-    st.write("### Raw scores")
-    for i, file in enumerate(uploaded_files):
-        df = pd.read_csv(
-            file, header=None, index_col=0, nrows=st.session_state["num_entry"]
+        st.write("## Upload files to start")
+
+        # エントリーリストアップロード
+        entrylist_uploaded = st.file_uploader(
+            f"Upload entrylist ({genre})",
+            type="csv",
+            key=f"{genre}_entrylist_upload"
         )
-        scores_list.append(df)
 
-        # get file name for column name
-        file_name = file.name
-        file_name = file_name[:-4]  # drop .csv
-        name_list.append(file_name)
+        entrylist = None
+        if entrylist_uploaded:
+            entrylist = pd.read_csv(
+                entrylist_uploaded,
+                header=None,
+                nrows=st.session_state[f"{genre}_num_entry"]
+            )
+            col_names = ["audition_number", "name", "represent"]
+            entrylist.columns = col_names
+            st.session_state[f"{genre}_entrylist"] = entrylist
 
-    scores = pd.concat(scores_list, axis=1, ignore_index=True)
-    scores.index = range(len(scores))  # give index from 0 to n
+        # スコアシートアップロード
+        uploaded_files = st.file_uploader(
+            f"Upload score sheets from judges ({genre})",
+            type="csv",
+            accept_multiple_files=True,
+            key=f"{genre}_scores_upload"
+        )
 
-    scores = pd.concat([entrylist, scores], axis=1, ignore_index=True)
-    scores.columns = name_list
-    st.dataframe(scores)
+        if uploaded_files:
+            if entrylist is None and st.session_state[f"{genre}_entrylist"] is None:
+                st.error("Upload entrylist first.")
+            else:
+                if entrylist is None:
+                    entrylist = st.session_state[f"{genre}_entrylist"]
 
+                scores_list = []
+                name_list = entrylist.columns.tolist()
 
-if uploaded_files:
-    name_list = name_list[-4:]  # judges name
+                st.write("### Raw scores")
+                for file in uploaded_files:
+                    df = pd.read_csv(
+                        file,
+                        header=None,
+                        index_col=0,
+                        nrows=st.session_state[f"{genre}_num_entry"]
+                    )
+                    scores_list.append(df)
 
-    # processing
-    scores_processed = process(scores, name_list)
+                    file_name = file.name[:-4]  # drop .csv
+                    name_list.append(file_name)
 
-    # get top36
-    getJusteDebuoutSelection(scores_processed)
+                scores = pd.concat(scores_list, axis=1, ignore_index=True)
+                scores.index = range(len(scores))
 
-st.write("## Grouping to 8 groups")
+                scores = pd.concat([entrylist, scores], axis=1, ignore_index=True)
+                scores.columns = name_list
+                st.dataframe(scores)
 
-# グループ分けの実行
-if st.button("Random 8 groups"):
-    groups = split_random(players_top5to36, random_seed)
-    # display groups
-    for i, group in enumerate(groups):
-        st.write(f"### Group {i+1}")
-        st.write(group)
+                # ジャッジ名リスト（最後の4列）
+                judges_list = name_list[-len(uploaded_files):]
 
-    # 履歴に追加
-    history = st.session_state.get("history", [])
-    history.append(groups)
+                # スコア処理（UIで設定した特別ジャッジを使用）
+                special_judge = st.session_state[f"{genre}_special_judge"]
+                if special_judge == "":
+                    special_judge = None
+                scores_processed = process(scores, judges_list, special_judge)
 
-    # save to session state
-    st.session_state["groups"] = groups
-    st.session_state["history"] = history
+                # 結果表示
+                getJusteDebuoutSelection(scores_processed)
 
-# output files
-if st.button("Looks good to output?"):
-    if not st.session_state["groups"]:
-        st.error("Do grouping first.")
-        st.stop()
+                st.session_state[f"{genre}_scores"] = scores
+                st.session_state[f"{genre}_processed"] = True
 
-    # load groups from session state
-    groups = st.session_state["groups"]
-    # get_zip(groups)
-    outputtext(groups, st.session_state["top4"])
+# サマリーセクション
+st.write("---")
+st.write("## Summary")
 
-st.write("### Logs")
+completed_genres = []
+for genre in GENRES:
+    if st.session_state[f"{genre}_processed"]:
+        completed_genres.append(genre)
 
-if len(st.session_state["history"]) > 1:
-    # display history
-    st.write("Display history")
-    history = st.session_state["history"]
-    st.write(f"{len(history)} logs found")
-    # st.write(len(history[0]))
-
-    index = st.slider("Select history", 0, len(history) - 1, 0)
-    st.session_state["index"] = index
-    st.write(history[index])
-
-    if st.button("Looks good to this output?"):
-        groups = history[index]
-        # get_zip(groups)
-        outputtext(groups, st.session_state["top4"])
+if completed_genres:
+    st.success(f"Completed genres: {', '.join(completed_genres)}")
+else:
+    st.info("No genres processed yet. Upload files in each tab.")

@@ -25,30 +25,21 @@ def readcsv(folder_path, file_names):
     return scores
 
 
-def process(scores, judges):
+def process(scores, judges, special_judge=None):
     """
-    (score - mean) / deviation
+    Process scores with optional 2x multiplier for special judge.
+
+    Args:
+        scores: DataFrame with participant info and scores
+        judges: List of judge column names
+        special_judge: Judge name to apply 2x multiplier (optional)
     """
     scores_processed = scores[["audition_number", "name", "represent"]].copy()
 
-    # scores_mean = scores[judges].mean(axis=0)
-    # scores_std = scores[judges].std(axis=0)
-
-    # # st.write(judges)
-    # # st.write(scores_mean)
-    # # st.write(scores_std)
-
-    # for judge in judges:
-    #     scores_processed.loc[:, judge] = (
-    #         scores.loc[:, judge] - scores_mean.loc[judge]
-    #     ) / scores_std.loc[judge]
-
     for judge in judges:
-        if judge == 'HERO':
-            newlist = []
-            for n in scores.loc[:, judge]:
-                newlist.append(n*2)
-            scores_processed.loc[:, judge] = newlist
+        if special_judge and judge == special_judge:
+            # Apply 2x multiplier for special judge
+            scores_processed.loc[:, judge] = scores.loc[:, judge] * 2
         else:
             scores_processed.loc[:, judge] = scores.loc[:, judge]
 
