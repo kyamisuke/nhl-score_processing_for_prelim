@@ -82,35 +82,51 @@ def top36(scores_processed):
     return players_top4, players_top5to36, players_top5to36_sorted
 
 def getJusteDebuoutSelection(scores_processed):
-    scores_des = scores_processed.sort_values(by="sum", ascending=False)
-
-    col_names = ["audition_number", "name", "represent"]
-    st.write("### Results of 1st prelim")
-    # 8位タイまでを含める（8位のスコアと同点の参加者も表示）
-    eighth_place_score = scores_des.iloc[7]["sum"]
-    top8_with_ties = scores_des[scores_des["sum"] >= eighth_place_score].copy()
+    scores_des = scores_processed.sort_values(by="sum", ascending=False).copy()
 
     # 順位を追加（同点は同じ順位）
-    top8_with_ties.insert(0, "rank", scores_des["sum"].rank(ascending=False, method="min").astype(int))
-    top8_with_ties = top8_with_ties[top8_with_ties["rank"] <= top8_with_ties["rank"].max()]
+    scores_des.insert(0, "rank", scores_des["sum"].rank(ascending=False, method="min").astype(int))
 
-    # 8位タイの選手をハイライト
-    def highlight_eighth_ties(df):
-        is_eighth_tie = df["sum"] == eighth_place_score
-        return ["background-color: #ffeb3b" if v else "" for v in is_eighth_tie]
+    st.write("### Results (sorted by score)")
 
-    styled_df = top8_with_ties.style.apply(lambda _: highlight_eighth_ties(top8_with_ties), axis=0)
-    st.dataframe(styled_df)
+    # 8位のスコアを取得
+    eighth_place_score = scores_des.iloc[7]["sum"]
 
-    st.write("### Results of best 16")
-    st.write(scores_des.iloc[:16])
+    # 8位以内（rank <= 8）の人数をカウント
+    count_in_top8 = (scores_des["rank"] <= 8).sum()
 
-    players_top8 = (
-        scores_des[col_names].iloc[:8].sort_values(by="audition_number", ascending=True)
-    )
+    # 8人を超える場合のみTie状態（未確定）
+    has_unconfirmed_tie = count_in_top8 > 8
 
-    st.write("### Results of best 8; ascending=True")
-    st.write(players_top8)
+    # ハイライト用のスタイル関数
+    def highlight_rows(row):
+        rank = row["rank"]
+        score = row["sum"]
+
+        if has_unconfirmed_tie and score == eighth_place_score:
+            # 8位タイが9人以上 = 未確定
+            return ["background-color: #fff59d"] * len(row)  # yellow
+        elif rank <= 8:
+            # 上位8名確定
+            return ["background-color: #a5d6a7"] * len(row)  # green
+        else:
+            return [""] * len(row)
+
+    styled_df = scores_des.style.apply(highlight_rows, axis=1)
+    st.dataframe(styled_df, use_container_width=True)
+
+    # 注釈（Tie状態がある場合のみ黄色の説明を表示）
+    if has_unconfirmed_tie:
+        st.markdown("""
+**Legend:**
+- 🟩 **Green**: Confirmed Top 8
+- 🟨 **Yellow**: Tied at 8th place (not yet confirmed - more than 8 people in top 8 ranks)
+""")
+    else:
+        st.markdown("""
+**Legend:**
+- 🟩 **Green**: Confirmed Top 8
+""")
 
 def outputfiles_local(
     folder_path, players_top4, players_top5to36, players_top5to36_sorted
