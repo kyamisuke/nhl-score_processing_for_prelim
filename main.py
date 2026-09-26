@@ -91,26 +91,17 @@ def getJusteDebuoutSelection(scores_processed):
     complete_ranking.index = range(1, len(complete_ranking) + 1)
     complete_ranking.index.name = "Rank"
 
-    col_names = ["audition_number", "name", "represent"]
+    # top16をハイライト
+    def highlight_top16(row):
+        color = "background-color: rgba(255, 215, 0, 0.35)" if row.name <= 16 else ""
+        return [color] * len(row)
 
     st.write("### Complete Rankings - All Participants")
-    st.write(complete_ranking)
-
-    st.write("### Results of best 8")
-    st.write(complete_ranking.iloc[:8])
-
-    st.write("### Results of best 12")
-    st.write(complete_ranking.iloc[:12])
-
-    st.write("### Results of best 16")
-    st.write(complete_ranking.iloc[:16])
-
-    players_top8 = (
-        scores_des[col_names].iloc[:12].sort_values(by="audition_number", ascending=True)
+    # top20 + ヘッダーが収まる高さ (1行 = 35px)
+    st.dataframe(
+        complete_ranking.style.apply(highlight_top16, axis=1),
+        height=(20 + 1) * 35 + 3,
     )
-
-    st.write("### Results of best 12; ascending=True")
-    st.write(players_top8)
 
 def outputfiles_local(
     folder_path, players_top4, players_top5to36, players_top5to36_sorted

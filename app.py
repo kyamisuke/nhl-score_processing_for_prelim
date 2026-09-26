@@ -1,41 +1,41 @@
 # app.py
 
-import numpy as np
 import pandas as pd
 import streamlit as st
 
-from main import process, top36, getJusteDebuoutSelection
-from makegroup import split_random
-from outputtext import outputtext
+from main import process, getJusteDebuoutSelection
 
 # グローバル変数
 uploaded_files = []
 
-# init session state: num_entry, history, groups
+# init session state: num_entry
 if "num_entry" not in st.session_state:
-    st.session_state["num_entry"] = 0
-if "history" not in st.session_state:
-    st.session_state["history"] = []
-if "groups" not in st.session_state:
-    st.session_state["groups"] = []
-if "top4" not in st.session_state:
-    st.session_state["top4"] = []
+    st.session_state["num_entry"] = 200
 
-# set random seed randomly
-random_seed = np.random.randint(1000)
+# 新しいentrylistがアップロードされたら、その行数をTotal entry numberに反映
+entrylist_file = st.session_state.get("entrylist_file")
+if entrylist_file is not None and (
+    st.session_state.get("entrylist_file_id") != entrylist_file.file_id
+):
+    st.session_state["entrylist_file_id"] = entrylist_file.file_id
+    st.session_state["num_entry"] = len(pd.read_csv(entrylist_file, header=None))
+    entrylist_file.seek(0)
 
-st.title("Processing 1st prelim and grouping to 8")
+st.title("Processing 1st prelim")
 
 # input total entry number to session state
 st.write("### Input total entry number")
-st.session_state["num_entry"] = st.number_input(
-    "Total entry number", min_value=0, value=200
+st.number_input("Total entry number", min_value=0, key="num_entry")
+st.caption(
+    "Automatically updated to the number of rows when an entrylist is uploaded."
 )
 
 st.write("## Upload files to start ")
 
 # upload entrylist
-enterylist_uploaded = st.file_uploader("Upload entrylist", type="csv")
+enterylist_uploaded = st.file_uploader(
+    "Upload entrylist", type="csv", key="entrylist_file"
+)
 if enterylist_uploaded:
     entrylist = pd.read_csv(
         enterylist_uploaded, header=None, nrows=st.session_state["num_entry"]
@@ -80,57 +80,10 @@ if uploaded_file:
 
 
 if uploaded_files:
-    name_list = name_list[-4:]  # judges name
+    name_list = name_list[len(entrylist.columns):]  # judges name
 
     # processing
     scores_processed = process(scores, name_list)
 
-    # get top36
+    # display complete ranking
     getJusteDebuoutSelection(scores_processed)
-
-st.write("## Grouping to 8 groups")
-
-# グループ分けの実行
-if st.button("Random 8 groups"):
-    groups = split_random(players_top5to36, random_seed)
-    # display groups
-    for i, group in enumerate(groups):
-        st.write(f"### Group {i+1}")
-        st.write(group)
-
-    # 履歴に追加
-    history = st.session_state.get("history", [])
-    history.append(groups)
-
-    # save to session state
-    st.session_state["groups"] = groups
-    st.session_state["history"] = history
-
-# output files
-if st.button("Looks good to output?"):
-    if not st.session_state["groups"]:
-        st.error("Do grouping first.")
-        st.stop()
-
-    # load groups from session state
-    groups = st.session_state["groups"]
-    # get_zip(groups)
-    outputtext(groups, st.session_state["top4"])
-
-st.write("### Logs")
-
-if len(st.session_state["history"]) > 1:
-    # display history
-    st.write("Display history")
-    history = st.session_state["history"]
-    st.write(f"{len(history)} logs found")
-    # st.write(len(history[0]))
-
-    index = st.slider("Select history", 0, len(history) - 1, 0)
-    st.session_state["index"] = index
-    st.write(history[index])
-
-    if st.button("Looks good to this output?"):
-        groups = history[index]
-        # get_zip(groups)
-        outputtext(groups, st.session_state["top4"])
