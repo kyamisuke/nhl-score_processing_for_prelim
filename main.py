@@ -48,6 +48,21 @@ def process(scores, judges):
     return scores_processed
 
 
+def process_simple_sum(scores, judges, double_judges):
+    """
+    juste debout: 単純sum。同一ジャンルのジャッジ (double_judges) の得点は2倍
+    """
+    scores_processed = scores[["audition_number", "name", "represent"]].copy()
+
+    for judge in judges:
+        weight = 2 if judge in double_judges else 1
+        scores_processed.loc[:, judge] = scores.loc[:, judge] * weight
+
+    scores_processed["sum"] = scores_processed[judges].sum(axis=1)
+
+    return scores_processed
+
+
 def top36(scores_processed):
     scores_des = scores_processed.sort_values(by="sum", ascending=False)
 
